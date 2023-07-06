@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user
 from .models import PDF, Comment
 from django.contrib.auth.models import User
+from .templatetags import extras
 
 @login_required(login_url = 'login')
 def home(request):
@@ -66,9 +67,29 @@ def logout(request):
 #TODO one more permission.
 def discuss(request, pk):
     pdf_instance = get_object_or_404(PDF, pk=pk)
-    comments = Comment.objects.filter(pdf = pdf_instance).order_by('-timestamp')
+    comments = Comment.objects.filter(pdf = pdf_instance, parent=None).order_by('-timestamp')
+    replies = Comment.objects.filter(pdf=pdf_instance).exclude(parent=None)
+    replyDict = {}
+    for reply in replies:
+        if reply.parent.id not in replyDict.keys():
+            replyDict[reply.parent.id] = [reply]
+        else:
+            replyDict[reply.parent.id].append(reply)
+    print(replyDict)
     context = {'pdf': pdf_instance, 'comments' : comments, 
-               'user' : request.user, 'users' : User.objects.all()}
+               'user' : request.user, 'users' : User.objects.all(),
+               'replyDict' : replyDict}
+    
+    if request.method == 'POST':
+        share_form = SharePDFForm(request.POST)
+        if share_form.is_valid():
+            users_shared_with = share_form.cleaned_data['users_shared_with']
+            pdf_instance.users_shared_with.set(users_shared_with)
+            messages.success(request, "File Shared successfully!")
+    else:
+        share_form = SharePDFForm()
+
+    context['share_form'] = share_form
     return render(request, 'app/discuss.html', context)
 
 def post_comment(request):
@@ -76,26 +97,19 @@ def post_comment(request):
         comment_description = request.POST.get('comment_description')
         user = request.user
         pdfId = request.POST.get('pdfId')
+        parent_id = request.POST.get('parentSno')
         pdf_instance = get_object_or_404(PDF, pk=pdfId)
 
-        new_comment = Comment(description=comment_description, author=user, pdf=pdf_instance)
+        if parent_id == "":
+            new_comment = Comment(description=comment_description, author=user, pdf=pdf_instance)
+            messages.success(request, 'Comment posted successfully!')
+        else:
+            parent = Comment.objects.get(pk=parent_id)  
+            new_comment = Comment(description=comment_description, author=user, pdf=pdf_instance, parent=parent)
+            messages.success(request, 'Reply posted successfully!')
+        
         new_comment.save()
-        messages.success(request, 'Comment posted successfully!')
 
     return redirect(f'/discuss/{pdfId}')
 
 
-def share_pdf(request, pdf_id):
-    pdf = PDF.objects.get(id=pdf_id)
-
-    if request.method == 'POST':
-        form = SharePDFForm(request.POST)
-        if form.is_valid():
-            users_shared_with = form.cleaned_data['users_shared_with']
-            pdf.users_shared_with.set(users_shared_with)
-            messages.success(request, "File Shared successfully!")
-    else:
-        form = SharePDFForm()
-
-    context = {'pdf': pdf, 'form': form}
-    return render(request, 'app/discuss.html', context)

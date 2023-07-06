@@ -7,6 +7,7 @@ class PDF(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="author")
     file = models.FileField(default = 'blank', upload_to='pdf_files')
     users_shared_with = models.ManyToManyField(User, related_name='shared_pdfs')
+    timestamp = models.DateTimeField(default = now)
 
     def __str__(self):
         return self.title
@@ -19,4 +20,4 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(default = now)
 
     def __str__(self):
-        return f'{self.author.username}s comment -{self.pk}'
+        return f'{self.description[0:10]} ... by {self.author.username}'

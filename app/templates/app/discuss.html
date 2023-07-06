@@ -1,6 +1,7 @@
 {% extends "app/base.html" %}
 {% block content %}
 {% load humanize %}
+{% load extras %}
 {% comment %} share pdf {% endcomment %}
 {% comment %} comment section {% endcomment %}
 
@@ -16,29 +17,53 @@
     <h5 class="card-title">(No Name)</h5>
     {%endif%}
     
-    <p class="card-text fw-italic">Pdf uploaded by <i>{{user.username}}</i> on (some timestamp) </p>
+    <p class="card-text fw-italic">Pdf uploaded by <span style="font-size:12px;" class="badge badge-secondary fs-4">{{pdf.author.username}}</span> on <span style="font-size:12px;">{{ pdf.timestamp }}</span> </p>
     <p>File: <a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>    
   </div>
 </div>
 
   <hr></hr>
   <div class="container">
-    
-    <form method="post" action="{% url 'share-pdf' pdf.pk %}">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users): </label>
-        <select multiple class="form-control" id="id_users_shared_with" name="users_shared_with">
-          {% for user in users %}
-            <option value="{{ user.id }}">{{ user.username }}</option>
-            <hr></hr>
-          {% endfor %}
-        </select>
+    <div class="accordion" id="shareAccordion">
+      <div class="card">
+        <div class="card-header" id="shareHeading">
+          <h2 class="mb-0">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#shareCollapse" aria-expanded="true" aria-controls="shareCollapse">
+              Share PDF
+            </button>
+          </h2>
+        </div>
+        <div id="shareCollapse" class="collapse" aria-labelledby="shareHeading" data-parent="#shareAccordion">
+          <div class="card-body">
+            <form method="post" action="{% url 'discuss' pdf.pk %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users):</label>
+                <select multiple class="form-control" id="id_users_shared_with" name="users_shared_with">
+                  {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-dark">Share</button>
+              <button id="generateLink" class="btn btn-dark">Or generate link</button>
+            </form>
+          </div>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary">Share</button>
-    </form>
+    </div>
   </div>
   
+  <script>
+  const generateLinkButton = document.getElementById('generateLink');
+  const pdfPk = "{{ pdf.pk }}";
+
+  generateLinkButton.addEventListener('click', () => {
+    const discussUrl = `/discuss/${pdfPk}`;
+    window.open(discussUrl, '_blank');
+  });
+</script>
+
   <div class="container">
     <h2>Comments ({{comments.count}})</h2>
 
@@ -51,7 +76,7 @@
         <div class="mb-3">
           <input type="text" class="form-control" name="comment_description" placeholder="Add a comment...">
         </div>
-        <input type="hidden" name="pdfId" value={{pdf.pk}}>
+        <input type="hidden" name="pdfId" value="">
         <button type="submit" class="btn btn-dark">Post</button>
       </form>
 
@@ -60,10 +85,37 @@
           <div class="col-md-2">
               <img class="border border-dark rounded mx-auto d-block w-100 p-2" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="userImage">
           </div>
-          <div style="border-radius:5px" class="col-md-10 p-3 bg-opacity-10 border border-info border-start-0 rounded-end">
-              <b>{{ comment.author.username }}</b> <span style="font-size:12px; padding:8px" class="badge badge-secondary">{{ comment.timestamp | naturaltime }}</span>
-              <div style="margin-top:5px">{{ comment.description }}</div>
+          <div style="border-radius: 5px" class="col-md-10 p-3 bg-opacity-10 border border-info border-start-0 rounded-end">
+            <b>{{ comment.author.username }}</b> <span style="font-size: 12px; padding: 8px" class="badge badge-secondary">{{ comment.timestamp | naturaltime }}</span>
+            <div style="margin-top: 5px">{{ comment.description }}</div>
+            <button class="btn btn-info btn-sm my-2" type="button" data-toggle="collapse" data-target="#replyCollapse{{ comment.id }}" aria-expanded="false" aria-controls="replyCollapse{{ comment.id }}">
+              Reply
+            </button>
+
+            <div class="collapse" id="replyCollapse{{ comment.id }}">
+              <div class="card card-body">
+                <form action="{% url 'post-comment' %}" method="post">
+                  {% csrf_token %}
+                  <div class="mb-3">
+                    <input type="text" class="form-control" name="comment_description" placeholder="Add a Reply...">
+                    <input type="hidden" name="parentSno" value={{comment.id}}>
+                  </div>
+                  <input type="hidden" name="pdfId" value={{pdf.pk}}>
+                  <button type="submit" class="btn btn-dark">Post</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="replies bg-danger my-2">
+              {%for reply in replyDict|get_val:comment.id %}
+               {{reply}}
+               <br>
+              {% endfor %}
+              
+            </div>
+
           </div>
+          
       </div>
       <hr></hr>
      {% endfor %}
