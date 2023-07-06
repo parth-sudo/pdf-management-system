@@ -1,0 +1,81 @@
+{% extends "app/base.html" %}
+{% block content %}
+{% load humanize %}
+{% comment %} share pdf {% endcomment %}
+{% comment %} comment section {% endcomment %}
+
+
+<div class="card text-center">
+  <div class="card-header">
+    <h3> Discuss about this pdf </h3>
+  </div>
+  <div class="card-body">
+    {%if pdf.title|length > 0 %}
+    <h5 class="card-title">{{ pdf.title }}</h5>
+    {%else%}
+    <h5 class="card-title">(No Name)</h5>
+    {%endif%}
+    
+    <p class="card-text fw-italic">Pdf uploaded by <i>{{user.username}}</i> on (some timestamp) </p>
+    <p>File: <a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>    
+  </div>
+</div>
+
+  <hr></hr>
+  <div class="container">
+    
+    <form method="post" action="{% url 'share-pdf' pdf.pk %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users): </label>
+        <select multiple class="form-control" id="id_users_shared_with" name="users_shared_with">
+          {% for user in users %}
+            <option value="{{ user.id }}">{{ user.username }}</option>
+            <hr></hr>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Share</button>
+    </form>
+  </div>
+  
+  <div class="container">
+    <h2>Comments ({{comments.count}})</h2>
+
+    <div class="my-2">
+
+      {% if user.is_authenticated %}
+
+      <form action="{% url 'post-comment' %}" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <input type="text" class="form-control" name="comment_description" placeholder="Add a comment...">
+        </div>
+        <input type="hidden" name="pdfId" value={{pdf.pk}}>
+        <button type="submit" class="btn btn-dark">Post</button>
+      </form>
+
+      {% for comment in comments %}
+      <div class="row" style="margin-bottom:5px">
+          <div class="col-md-2">
+              <img class="border border-dark rounded mx-auto d-block w-100 p-2" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="userImage">
+          </div>
+          <div style="border-radius:5px" class="col-md-10 p-3 bg-opacity-10 border border-info border-start-0 rounded-end">
+              <b>{{ comment.author.username }}</b> <span style="font-size:12px; padding:8px" class="badge badge-secondary">{{ comment.timestamp | naturaltime }}</span>
+              <div style="margin-top:5px">{{ comment.description }}</div>
+          </div>
+      </div>
+      <hr></hr>
+     {% endfor %}
+  
+      {% else %}
+
+      <p style="color: #17a2b8;"><a href="{% url 'register' %}">Sign up to join the discussion! </a></p>
+
+      {% endif %}
+
+    </div>
+
+
+  </div> 
+{% endblock %}

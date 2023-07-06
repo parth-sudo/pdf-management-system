@@ -1,0 +1,85 @@
+{% extends "app/base.html" %}
+{% block content %}
+
+<div style="margin: 0 auto">
+
+  <div style="background-color: #F5F0F0; border-radius: 10px; margin-top: 5px; margin-bottom: 20px" class="row p-4">
+    <div class="text-center">
+      <h2>Upload PDF</h2>
+    </div>
+    <form id="upload-form" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3 align-items-center">
+        <div class="col-md-6">
+          {{ form.file }}
+        </div>
+        <div class="col-md-6">
+          <label for="id_title" class="form-label">Title (Optional)</label>
+          {{ form.title }}
+        </div>
+      </div>
+      <button id="upload-button" type="submit" class="btn btn-primary mt-3" disabled title="Please select a PDF file">Upload</button>
+    </form>
+  </div>
+  
+  <script>
+    const fileInput = document.getElementById('id_file');
+    const uploadButton = document.getElementById('upload-button');
+  
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0 && validateFileType(fileInput.files[0])) {
+        uploadButton.removeAttribute('disabled');
+        uploadButton.removeAttribute('title');
+      } else {
+        uploadButton.setAttribute('disabled', 'disabled');
+        uploadButton.setAttribute('title', 'Please select a PDF file');
+      }
+    });
+  
+    function validateFileType(file) {
+      const allowedExtensions = /(\.pdf)$/i;
+      return allowedExtensions.test(file.name);
+    }
+  </script>
+  
+  
+   <div style="background-color:#EBEBEB; border-radius:15px" class="row">
+    
+    <div class="col-md-6">
+      <h3>Your PDFs</h3>
+      {% for pdf in user_pdfs %}
+        <div class="card text-center mb-3" style="width: 18rem;">
+          <div class="card-body">
+            {%if pdf.title|length > 0 %}
+            <h5 class="card-title">{{ pdf.title }}</h5>
+            {%else%}
+            <h5 class="card-title">(No Name)</h5>
+            {%endif%}
+            <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>
+            <a href="{% url 'discuss' pdf.pk %}" class="btn btn-success">Discuss</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    
+    <div class="col-md-6">
+      <h3>PDFs shared with you</h3>
+      {% for pdf in shared_pdfs %}
+        <div class="card text-center mb-3" style="width: 18rem;">
+          <div class="card-body">
+            {%if pdf.title|length > 0 %}
+            <h5 class="card-title">{{ pdf.title }}</h5>
+            {%else%}
+            <h5 class="card-title">(No Name)</h5>
+            {%endif%}
+            <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name }}</a></p>
+            <a href="{% url 'discuss' pdf.pk %}" class="btn btn-success">Discuss</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  
+</div>
+
+{% endblock %}
