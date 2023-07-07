@@ -3,23 +3,37 @@
 
 <div style="margin: 0 auto">
 
-  <div style="background-color: #F5F0F0; border-radius: 10px; margin-top: 5px; margin-bottom: 20px" class="row p-4">
-    <div class="text-center">
-      <h2>Upload PDF</h2>
-    </div>
-    <form id="upload-form" method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div class="row g-3 align-items-center">
-        <div class="col-md-6">
-          {{ form.file }}
-        </div>
-        <div class="col-md-6">
-          <label for="id_title" class="form-label">Title (Optional)</label>
-          {{ form.title }}
+  <div class="text-center my-2">
+    <h3>
+      Welcome!
+      <small class="text-muted">Share some pdfs today</small>
+    </h3>
+  </div>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div style="background-color: #F5F0F0; border-radius: 10px; margin-top: 2px; margin-bottom: 20px" class="p-4">
+          <div class="text-center mb-4">
+            <h2>Upload PDF</h2>
+          </div>
+          <form id="upload-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_file" class="form-label">File</label>
+              {{ form.file }}
+            </div>
+            <div class="mb-3">
+              <label for="id_title" class="form-label">Title (Optional)</label>
+              {{ form.title }}
+            </div>
+            <div class="text-center">
+            <button id="upload-button" type="submit" class="btn btn-primary mt-3" disabled title="Please select a PDF file">Upload</button>
+          </div>
+          </form>
         </div>
       </div>
-      <button id="upload-button" type="submit" class="btn btn-primary mt-3" disabled title="Please select a PDF file">Upload</button>
-    </form>
+    </div>
   </div>
   
   <script>
@@ -43,10 +57,16 @@
   </script>
   
   
+  <div style="" class="text-center"> <h4> Dashboard </h4> </div>
    <div style="background-color:#EBEBEB; border-radius:15px" class="row">
+   
+    <div class="col-md-1">
+    </div>
     
-    <div class="col-md-6">
-      <h3>Your PDFs</h3>
+    <div class="col-md-4">
+      <div class="text-center">
+       <h4>Your PDFs</h4>
+      </div>
       {% for pdf in user_pdfs %}
         <div class="card text-center mb-3" style="width: 18rem;">
           <div class="card-body">
@@ -61,9 +81,14 @@
         </div>
       {% endfor %}
     </div>
+
+    <div class="col-md-2">
+    </div>
     
-    <div class="col-md-6">
-      <h3>PDFs shared with you</h3>
+    <div class="col-md-4">
+      <div class="text-center">
+        <h4>PDFs shared with you</h4>
+       </div>
       {% for pdf in shared_pdfs %}
         <div class="card text-center mb-3" style="width: 18rem;">
           <div class="card-body">
@@ -72,12 +97,15 @@
             {%else%}
             <h5 class="card-title">(No Name)</h5>
             {%endif%}
-            <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name }}</a></p>
+            <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>
             <a href="{% url 'discuss' pdf.pk %}" class="btn btn-success">Discuss</a>
           </div>
         </div>
       {% endfor %}
     </div>
+  </div>
+
+  <div class="col-md-1">
   </div>
   
 </div>

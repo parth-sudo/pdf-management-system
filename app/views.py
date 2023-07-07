@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib.auth.forms import UserCreationForm
 from .forms import CustomUserForm, PDFForm, SharePDFForm
 from django.contrib import messages
@@ -22,8 +23,8 @@ def home(request):
     else:
         form = PDFForm()
     
-    user_pdfs = PDF.objects.filter(author=request.user).order_by('title')
-    shared_pdfs = PDF.objects.filter(users_shared_with=request.user).order_by('title')
+    user_pdfs = PDF.objects.filter(author=request.user).order_by('-timestamp')
+    shared_pdfs = PDF.objects.filter(users_shared_with=request.user).order_by('-timestamp')
     context = {'form': form, 'user_pdfs': user_pdfs, 'shared_pdfs':shared_pdfs}
     return render(request, 'app/home.html', context)
 
@@ -63,11 +64,9 @@ def logout(request):
     auth_logout(request)
     return redirect('login')
 
-# @login_required(login_url = 'login')
-#TODO one more permission.
 def discuss(request, pk):
     pdf_instance = get_object_or_404(PDF, pk=pk)
-    comments = Comment.objects.filter(pdf = pdf_instance, parent=None).order_by('-timestamp')
+    comments = Comment.objects.filter(pdf = pdf_instance, parent=None).exclude(author__username='guest').order_by('-timestamp')
     replies = Comment.objects.filter(pdf=pdf_instance).exclude(parent=None)
     replyDict = {}
     for reply in replies:
@@ -75,10 +74,12 @@ def discuss(request, pk):
             replyDict[reply.parent.id] = [reply]
         else:
             replyDict[reply.parent.id].append(reply)
-    print(replyDict)
+    
+    guest_instance = User.objects.get(username='guest')
+    guest_comments = Comment.objects.filter(author = guest_instance)
     context = {'pdf': pdf_instance, 'comments' : comments, 
-               'user' : request.user, 'users' : User.objects.all(),
-               'replyDict' : replyDict}
+               'user' : request.user, 'users' : User.objects.exclude(username='guest'),
+               'replyDict' : replyDict, 'guest_comments' : guest_comments}
     
     if request.method == 'POST':
         share_form = SharePDFForm(request.POST)
@@ -112,4 +113,23 @@ def post_comment(request):
 
     return redirect(f'/discuss/{pdfId}')
 
+def guest_comment(request):
 
+    if request.method == 'POST':
+        pdfId = request.POST.get('pdfId')
+        pdf_instance = get_object_or_404(PDF, pk=pdfId)
+        guest_code = request.POST.get('guest_code')
+        guest_comment = request.POST.get('guest_comment')
+        guest_instance = User.objects.get(username='guest')
+
+        if str(guest_code) == str(pdf_instance.guest_code):
+            print("line 105")
+            new_comment = Comment(description=guest_comment, author=guest_instance, pdf=pdf_instance)
+        elif str(guest_code) != str(pdf_instance.guest_code):
+            return HttpResponse("Incorrect guest_code entered")
+        
+        new_comment.save()
+    return redirect(f'/discuss/{pdfId}')
+
+def about(request):
+    return render(request, 'app/about.html')

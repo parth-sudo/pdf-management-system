@@ -5,65 +5,123 @@
 {% comment %} share pdf {% endcomment %}
 {% comment %} comment section {% endcomment %}
 
+<div class="row">
+  <div class="card text-center col-md-10">
+    <div class="card-header">
+      <h3> Discuss about this pdf </h3>
+    </div>
+    <div class="card-body">
+      {%if pdf.title|length > 0 %}
+      <h5 class="card-title">{{ pdf.title }}</h5>
+      {%else%}
+      <h5 class="card-title">(No Name)</h5>
+      {%endif%}
+      
+      <p class="card-text fw-italic">Pdf uploaded by <span style="font-size:12px;" class="badge badge-secondary fs-4">{{pdf.author.username}}
+      </span> on <span style="font-size:12px;">{{ pdf.timestamp|date:"F j, Y" }}    </span> </p>
+      <p>File: <a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>    
+    </div>
 
-<div class="card text-center">
-  <div class="card-header">
-    <h3> Discuss about this pdf </h3>
-  </div>
-  <div class="card-body">
-    {%if pdf.title|length > 0 %}
-    <h5 class="card-title">{{ pdf.title }}</h5>
-    {%else%}
-    <h5 class="card-title">(No Name)</h5>
-    {%endif%}
-    
-    <p class="card-text fw-italic">Pdf uploaded by <span style="font-size:12px;" class="badge badge-secondary fs-4">{{pdf.author.username}}</span> on <span style="font-size:12px;">{{ pdf.timestamp }}</span> </p>
-    <p>File: <a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>    
-  </div>
-</div>
+    <hr></hr>
 
-  <hr></hr>
-  <div class="container">
-    <div class="accordion" id="shareAccordion">
-      <div class="card">
-        <div class="card-header" id="shareHeading">
-          <h2 class="mb-0">
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#shareCollapse" aria-expanded="true" aria-controls="shareCollapse">
-              Share PDF
-            </button>
-          </h2>
-        </div>
-        <div id="shareCollapse" class="collapse" aria-labelledby="shareHeading" data-parent="#shareAccordion">
-          <div class="card-body">
-            <form method="post" action="{% url 'discuss' pdf.pk %}">
-              {% csrf_token %}
-              <div class="form-group">
-                <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users):</label>
-                <select multiple class="form-control" id="id_users_shared_with" name="users_shared_with">
-                  {% for user in users %}
-                    <option value="{{ user.id }}">{{ user.username }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <button type="submit" class="btn btn-dark">Share</button>
-              <button id="generateLink" class="btn btn-dark">Or generate link</button>
-            </form>
+    {% if user.is_authenticated %}
+
+    <div class="container mb-2">
+      <div class="accordion" id="shareAccordion">
+        <div class="card">
+          <div class="card-header" id="shareHeading">
+            <h2 class="mb-0">
+              <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#shareCollapse" aria-expanded="true" aria-controls="shareCollapse">
+                Share PDF
+              </button>
+            </h2>
+          </div>
+          <div id="shareCollapse" class="collapse" aria-labelledby="shareHeading" data-parent="#shareAccordion">
+            <div class="card-body">
+              <form method="post" action="{% url 'discuss' pdf.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                  <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users):</label>
+                  <select multiple class="form-control" id="id_users_shared_with" name="users_shared_with">
+                    {% for user in users %}
+                      <option value="{{ user.id }}">{{ user.username }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <button disabled id="shareButton" type="submit" class="btn btn-dark">Share</button>
+                <button id="generateLink" class="btn btn-dark">Copy Link</button>
+              </form>
+            </div>
+            <script>
+              const selectField = document.getElementById('id_users_shared_with');
+              const shareButton = document.getElementById('shareButton');
+            
+              selectField.addEventListener('change', () => {
+                const selectedOptions = Array.from(selectField.selectedOptions);
+                if (selectedOptions.length > 0) {
+                  shareButton.removeAttribute('disabled');
+                } else {
+                  shareButton.setAttribute('disabled', 'disabled');
+                }
+              });
+
+              const generateLinkButton = document.getElementById('generateLink');
+              const pdfPk = "{{ pdf.pk }}";
+              const guestCode = "{{pdf.guest_code}}"
+              generateLinkButton.addEventListener('click', () => {
+                const discussUrl = `${window.location.origin}/discuss/${pdfPk}`;
+            
+                navigator.clipboard.writeText(discussUrl).then(() => {
+                  alert(`Link copied! Share this code with unauthenticated users to allow them to comment as guest: ${guestCode}`);
+                }).catch((error) => {
+                  console.error('Failed to copy link:', error);
+                });
+              });
+            </script>
           </div>
         </div>
       </div>
     </div>
+
+  {% endif %}
   </div>
+  <div class="col-md-2">
+    <h4>Comment as a guest</h4>
+    <form action="{% url 'guest-comment' %}" method="post">
+      {% csrf_token %}
+    <input type="text" class="form-control" name="guest_code" placeholder="Enter guest code...">
+    <br>
+    <input type="text" class="form-control" name="guest_comment" placeholder="Enter comment...">
+    <br>
+    <input type="hidden" name="pdfId" value="{{pdf.pk}}">
+    <input type="hidden" name="parentSno" value="">
+    <button type="submit" class="btn btn-dark">Post</button> 
+  </form>
+
+  <div class="text-center">
+    {%for comment in guest_comments %}
+     <div class="row border border-info rounded replies ml-2 mr-2">
+       <div class="col-md-2">
+        <p></p>
+       </div>
+       <div class="col-md-10 my-2 ">
+        <b>guest_user says</b> 
+        <div style="margin-top: 5px">{{ comment.description }}</div>  
+       </div>
+     </div>
+     <br>
+    {% endfor %}
+  </div>
+
+
+  </div>
+
   
-  <script>
-  const generateLinkButton = document.getElementById('generateLink');
-  const pdfPk = "{{ pdf.pk }}";
 
-  generateLinkButton.addEventListener('click', () => {
-    const discussUrl = `/discuss/${pdfPk}`;
-    window.open(discussUrl, '_blank');
-  });
-</script>
+</div>
 
+  <hr></hr>
+ 
   <div class="container">
     <h2>Comments ({{comments.count}})</h2>
 
@@ -76,7 +134,8 @@
         <div class="mb-3">
           <input type="text" class="form-control" name="comment_description" placeholder="Add a comment...">
         </div>
-        <input type="hidden" name="pdfId" value="">
+        <input type="hidden" name="pdfId" value="{{pdf.pk}}">
+        <input type="hidden" name="parentSno" value="">
         <button type="submit" class="btn btn-dark">Post</button>
       </form>
 
@@ -106,12 +165,19 @@
               </div>
             </div>
 
-            <div class="replies bg-danger my-2">
+            <div class="">
               {%for reply in replyDict|get_val:comment.id %}
-               {{reply}}
+               <div class="row border border-info rounded replies ml-2 mr-2">
+                 <div class="col-md-2">
+                   <img class="rounded mx-auto d-block w-100 p-1" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="userImage">
+                 </div>
+                 <div class="col-md-10 my-2 ">
+                  <b>{{ reply.author.username }}</b> <span style="font-size: 12px; padding: 8px" class="badge badge-secondary">{{ reply.timestamp | naturaltime }}</span>
+                  <div style="margin-top: 5px">{{ reply.description }}</div>  
+                 </div>
+               </div>
                <br>
               {% endfor %}
-              
             </div>
 
           </div>

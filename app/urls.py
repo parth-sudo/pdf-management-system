@@ -8,4 +8,6 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('discuss/<int:pk>/', views.discuss, name='discuss'),
     path('post-comment/', views.post_comment, name='post-comment'),
+    path('about/', views.about, name='about'),
+    path('guest-comment/', views.guest_comment, name='guest-comment'),
 ]
