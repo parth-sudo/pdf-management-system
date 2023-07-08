@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.forms import UserCreationForm
-from .forms import CustomUserForm, PDFForm, SharePDFForm
+from .forms import CustomUserForm, PDFForm, SharePDFForm, CommentForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -9,6 +9,7 @@ from .decorators import unauthenticated_user
 from .models import PDF, Comment
 from django.contrib.auth.models import User
 from .templatetags import extras
+from .extra_functions import random_string_generator
 
 @login_required(login_url = 'login')
 def home(request):
@@ -17,6 +18,7 @@ def home(request):
         if form.is_valid():
             pdf = form.save(commit=False)
             pdf.author = request.user
+            pdf.guest_code = random_string_generator()
             pdf.save()
             messages.success(request, "PDF Added Successfully!")
             return redirect('home')
@@ -76,7 +78,7 @@ def discuss(request, pk):
             replyDict[reply.parent.id].append(reply)
     
     guest_instance = User.objects.get(username='guest')
-    guest_comments = Comment.objects.filter(author = guest_instance)
+    guest_comments = Comment.objects.filter(author = guest_instance, pdf = pdf_instance)
     context = {'pdf': pdf_instance, 'comments' : comments, 
                'user' : request.user, 'users' : User.objects.exclude(username='guest'),
                'replyDict' : replyDict, 'guest_comments' : guest_comments}
@@ -94,24 +96,26 @@ def discuss(request, pk):
     return render(request, 'app/discuss.html', context)
 
 def post_comment(request):
+    context = {}
     if request.method == 'POST':
-        comment_description = request.POST.get('comment_description')
         user = request.user
         pdfId = request.POST.get('pdfId')
         parent_id = request.POST.get('parentSno')
+        comment_description = request.POST.get('comment_description')
         pdf_instance = get_object_or_404(PDF, pk=pdfId)
 
         if parent_id == "":
             new_comment = Comment(description=comment_description, author=user, pdf=pdf_instance)
             messages.success(request, 'Comment posted successfully!')
+            new_comment.save()
         else:
             parent = Comment.objects.get(pk=parent_id)  
             new_comment = Comment(description=comment_description, author=user, pdf=pdf_instance, parent=parent)
             messages.success(request, 'Reply posted successfully!')
-        
-        new_comment.save()
+            new_comment.save()
 
     return redirect(f'/discuss/{pdfId}')
+
 
 def guest_comment(request):
 

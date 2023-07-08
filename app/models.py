@@ -1,13 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
-import random
-import string
-
-def random_string_generator():
-    string_letters = string.ascii_letters + string.digits
-    random_string = ''.join(random.choice(string_letters) for _ in range(6))
-    return random_string
+from ckeditor.fields import RichTextField
+from .extra_functions import random_string_generator
 
 class PDF(models.Model):
     title = models.CharField(max_length=100, blank=True)
@@ -21,7 +16,7 @@ class PDF(models.Model):
         return self.title
     
 class Comment(models.Model):
-    description = models.TextField(blank = False)
+    description = RichTextField(null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     pdf = models.ForeignKey(PDF, on_delete=models.CASCADE, related_name="pdf_post")
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null = True)

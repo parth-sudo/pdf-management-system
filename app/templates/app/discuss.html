@@ -6,7 +6,7 @@
 {% comment %} comment section {% endcomment %}
 
 <div class="row">
-  <div class="card text-center col-md-10">
+  <div class="card text-center col-md-9">
     <div class="card-header">
       <h3> Discuss about this pdf </h3>
     </div>
@@ -72,7 +72,7 @@
                 const discussUrl = `${window.location.origin}/discuss/${pdfPk}`;
             
                 navigator.clipboard.writeText(discussUrl).then(() => {
-                  alert(`Link copied! Share this code with unauthenticated users to allow them to comment as guest: ${guestCode}`);
+                  alert(`Link copied! Share this code with others to allow them to comment as guests: ${guestCode}`);
                 }).catch((error) => {
                   console.error('Failed to copy link:', error);
                 });
@@ -85,13 +85,14 @@
 
   {% endif %}
   </div>
-  <div class="col-md-2">
+  <div class="col-md-3">
     <h4>Comment as a guest</h4>
     <form action="{% url 'guest-comment' %}" method="post">
       {% csrf_token %}
-    <input type="text" class="form-control" name="guest_code" placeholder="Enter guest code...">
+      <label for="id_users_shared_with" class="form-label">Enter sharing code given to you by user</label>
+    <input type="text" class="form-control" name="guest_code" placeholder="Enter sharing code...">
     <br>
-    <input type="text" class="form-control" name="guest_comment" placeholder="Enter comment...">
+    <input type="text" class="form-control" name="guest_comment" placeholder="Add comment...">
     <br>
     <input type="hidden" name="pdfId" value="{{pdf.pk}}">
     <input type="hidden" name="parentSno" value="">
