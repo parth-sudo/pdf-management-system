@@ -1,13 +1,11 @@
-![Screenshot (124)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/35269367-7abb-42d0-b80c-82cb8fea0c2d)# pdf-sharer
-
-## A pdf management and sharing system created by parth-sudo
-## Tech Stack used - 
-Python, Django, Bootstrap.
-
-Link - http://pdfsharer.pythonanywhere.com/
 
 ## Welcome to PDF Sharer, an easy way to manage and collab with others to share and discuss pdfs!
+### (A pdf management and sharing system created by parth-sudo)
 
+
+## Tech Stack used- 
+Python, Django, Bootstrap.
+Link - http://pdfsharer.pythonanywhere.com/
 
 ### How it works?
 
@@ -25,19 +23,25 @@ Now comment as a guest (without login) on the discuss forum!
 ![Screenshot (124)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/fed375f4-dbf3-4002-8a7d-b3a296bd9d13)
 
 
+
 ![Screenshot (125)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/b7d8f74d-bae2-49ce-b4fc-ba0e016ba797)
+
 
 
 ![Screenshot (126)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/bb1100c8-ccab-4517-99ba-590d4766d289)
 
 
+
 ![Screenshot (127)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/6899d8ab-5af9-4265-9dee-81652e7405ed)
+
 
 
 ![Screenshot (128)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/be287067-c7c5-4ef0-b6ba-33179c080068)
 
 
+
 ![Screenshot (129)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/8eaf0098-3d10-40c5-86c0-72304c2fe6bb)
+
 
 
 ![Screenshot (130)](https://github.com/parth-sudo/pdf-management-system/assets/59291824/ec4292aa-252b-41f3-aa9f-7c161586f56a)
