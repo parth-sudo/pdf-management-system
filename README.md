@@ -3,7 +3,7 @@
 ### (A pdf management and sharing system created by parth-sudo)
 
 
-## Tech Stack used- Python, Django, Bootstrap.
+## Tech Stack used- Python, Django, Bootstrap, sqlite3.
 
 Link - http://pdfsharer.pythonanywhere.com/
 
