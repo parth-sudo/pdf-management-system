@@ -38,7 +38,7 @@
           </div>
           <div id="shareCollapse" class="collapse" aria-labelledby="shareHeading" data-parent="#shareAccordion">
             <div class="card-body">
-              <form method="post" action="{% url 'discuss' pdf.pk %}">
+              <form method="post" action="{% url 'discuss' pdf.pk pdf.guest_code  %}">
                 {% csrf_token %}
                 <div class="form-group">
                   <label for="id_users_shared_with" class="form-label">Select Users to Share With (Press and hold ctrl/command to select multiple users):</label>
@@ -65,18 +65,6 @@
                 }
               });
 
-              const generateLinkButton = document.getElementById('generateLink');
-              const pdfPk = "{{ pdf.pk }}";
-              const guestCode = "{{pdf.guest_code}}"
-              generateLinkButton.addEventListener('click', () => {
-                const discussUrl = `${window.location.origin}/discuss/${pdfPk}`;
-            
-                navigator.clipboard.writeText(discussUrl).then(() => {
-                  alert(`Link copied! Share this code with others to allow them to comment as guests: ${guestCode}`);
-                }).catch((error) => {
-                  console.error('Failed to copy link:', error);
-                });
-              });
             </script>
           </div>
         </div>
@@ -85,14 +73,16 @@
 
   {% endif %}
   </div>
+  {% if not user.is_authenticated %} 
+
   <div class="col-md-3">
     <h4>Comment as a guest</h4>
     <form action="{% url 'guest-comment' %}" method="post">
       {% csrf_token %}
-      <label for="id_users_shared_with" class="form-label">Enter sharing code given to you by user</label>
-    <input type="text" class="form-control" name="guest_code" placeholder="Enter sharing code...">
+      {% comment %} <label for="id_users_shared_with" class="form-label">Enter sharing code given to you by user</label>
+    <input type="text" class="form-control" name="guest_code" placeholder="Enter sharing code..."> {% endcomment %}
     <br>
-    <input type="text" class="form-control" name="guest_comment" placeholder="Add comment...">
+    <input required type="text" class="form-control" name="guest_comment" placeholder="Add comment...">
     <br>
     <input type="hidden" name="pdfId" value="{{pdf.pk}}">
     <input type="hidden" name="parentSno" value="">
@@ -113,7 +103,7 @@
      <br>
     {% endfor %}
   </div>
-
+  {% endif %}
 
   </div>
 

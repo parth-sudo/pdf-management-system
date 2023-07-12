@@ -76,7 +76,7 @@
             <h5 class="card-title">(No Name)</h5>
             {%endif%}
             <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>
-            <a href="{% url 'discuss' pdf.pk %}" class="btn btn-success">Discuss</a>
+            <a href="{% url 'discuss' pdf.pk pdf.guest_code %}" class="btn btn-success">Discuss</a>
           </div>
         </div>
       {% endfor %}
@@ -98,7 +98,7 @@
             <h5 class="card-title">(No Name)</h5>
             {%endif%}
             <p><a href="{{ pdf.file.url }}" class="card-link">{{ pdf.file.name|cut:"pdf_files/" }}</a></p>
-            <a href="{% url 'discuss' pdf.pk %}" class="btn btn-success">Discuss</a>
+            <a href="{% url 'discuss' pdf.pk pdf.guest_code %}" class="btn btn-success">Discuss</a>
           </div>
         </div>
       {% endfor %}

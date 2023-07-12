@@ -66,7 +66,7 @@ def logout(request):
     auth_logout(request)
     return redirect('login')
 
-def discuss(request, pk):
+def discuss(request, pk, code):
     pdf_instance = get_object_or_404(PDF, pk=pk)
     comments = Comment.objects.filter(pdf = pdf_instance, parent=None).exclude(author__username='guest').order_by('-timestamp')
     replies = Comment.objects.filter(pdf=pdf_instance).exclude(parent=None)
@@ -86,10 +86,14 @@ def discuss(request, pk):
     if request.method == 'POST':
         share_form = SharePDFForm(request.POST)
         if share_form.is_valid():
+            if pk != pdf_instance.pk or code != pdf_instance.guest_code:
+                return HttpResponse("Path not found") 
             users_shared_with = share_form.cleaned_data['users_shared_with']
             pdf_instance.users_shared_with.set(users_shared_with)
-            messages.success(request, "File Shared successfully!")
+            messages.success(request, f"File Shared successfully! Copy URL: http://127.0.0.1:8000/discuss/{pdf_instance.pk}/{pdf_instance.guest_code}/")
     else:
+        if pk != pdf_instance.pk or code != pdf_instance.guest_code:
+            return HttpResponse("Path not found") 
         share_form = SharePDFForm()
 
     context['share_form'] = share_form
@@ -114,7 +118,7 @@ def post_comment(request):
             messages.success(request, 'Reply posted successfully!')
             new_comment.save()
 
-    return redirect(f'/discuss/{pdfId}')
+    return redirect(f'/discuss/{pdfId}/{pdf_instance.guest_code}')
 
 
 def guest_comment(request):
@@ -122,18 +126,24 @@ def guest_comment(request):
     if request.method == 'POST':
         pdfId = request.POST.get('pdfId')
         pdf_instance = get_object_or_404(PDF, pk=pdfId)
-        guest_code = request.POST.get('guest_code')
+        # guest_code = request.POST.get('guest_code')
         guest_comment = request.POST.get('guest_comment')
         guest_instance = User.objects.get(username='guest')
 
-        if str(guest_code) == str(pdf_instance.guest_code):
-            print("line 105")
-            new_comment = Comment(description=guest_comment, author=guest_instance, pdf=pdf_instance)
-        elif str(guest_code) != str(pdf_instance.guest_code):
-            return HttpResponse("Incorrect guest_code entered")
-        
+        new_comment = Comment(description=guest_comment, author=guest_instance, pdf=pdf_instance)
         new_comment.save()
-    return redirect(f'/discuss/{pdfId}')
+
+        # if str(guest_code) == str(pdf_instance.guest_code):
+        #     if request.user.is_authenticated == True:
+        #         messages.error(request, "You are already logged in, you cannot be a guest.")
+        #         return redirect(f'/discuss/{pdfId}')
+        #     new_comment = Comment(description=guest_comment, author=guest_instance, pdf=pdf_instance)
+        #     new_comment.save()
+        #     return redirect(f'/discuss/{pdfId}')
+        # elif str(guest_code) != str(pdf_instance.guest_code):
+        #     return HttpResponse("Incorrect guest_code entered")
+        
+    return redirect(f'/discuss/{pdfId}/{pdf_instance.guest_code}/')
 
 def about(request):
     return render(request, 'app/about.html')
